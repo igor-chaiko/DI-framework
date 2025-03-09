@@ -1,0 +1,8 @@
+<beans>
+    <bean id="parrot1" class="main.sub.Parrot" scope="singleton" init-method="init">
+        <property name="parrotName" value="Gosha"/>
+        <constructor-arg value="green"/>
+        <constructor-arg value="addressaddress"/>
+        <constructor-arg type="int" value="4"/>
+    </bean>
+</beans>
