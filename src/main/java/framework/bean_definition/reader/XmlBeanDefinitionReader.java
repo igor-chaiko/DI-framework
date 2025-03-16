@@ -5,5 +5,5 @@ import java.util.List;
 import framework.bean_definition.BeanDefinition;
 
 public interface XmlBeanDefinitionReader {
-    List<BeanDefinition> getBeanDefinitions();
+    List<BeanDefinition> getBeanDefinitions() throws ClassNotFoundException, NoSuchMethodException;
 }
