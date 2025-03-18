@@ -5,7 +5,7 @@ import framework.test_beans.Car;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        var container = new IoCContainer("/path/to/xml/config");
+        var container = new IoCContainer("src/main/resources/config.xml");
 
         var car0 = (Car) container.getBean("id1");
         var car1 = (Car) container.getBean("id1");
