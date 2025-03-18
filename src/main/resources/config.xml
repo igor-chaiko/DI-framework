@@ -1,8 +1,20 @@
-<beans>
-    <bean id="parrot1" class="main.sub.Parrot" scope="singleton" init-method="init">
-        <property name="parrotName" value="Gosha"/>
-        <constructor-arg value="green"/>
-        <constructor-arg value="addressaddress"/>
-        <constructor-arg type="int" value="4"/>
+<config>
+    <bean id="id1" class="framework.test_beans.Car" scope="singleton" lazy-init="false">
+        <properties>
+            <property name="maxSpeed" value="300"/>
+        </properties>
+        <constructor>
+            <arg value="4"/>
+            <arg value="BMW"/>
+        </constructor>
     </bean>
-</beans>
+    <bean id="id2" class="framework.test_beans.Car" scope="prototype" lazy-init="false">
+        <properties>
+            <property name="maxSpeed" value="280"/>
+        </properties>
+        <constructor>
+            <arg value="4"/>
+            <arg value="Mercedes"/>
+        </constructor>
+    </bean>
+</config>
