@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import framework.bean_definition.BeanDefinition;
+import framework.bean_definition.cyclic_dependencies.DependencyGraph;
 import framework.bean_definition.reader.XmlBeanDefinitionReaderImpl;
 import framework.bean_definition.scope.Prototype;
 import framework.bean_definition.scope.Scope;
@@ -91,7 +92,8 @@ public class IoCContainer implements IIocContainer {
 
                 if (BeanDefinition.beanTypesToDefinitions.containsKey(fieldType)) {
                     var beanDefinitions = BeanDefinition.beanTypesToDefinitions.get(fieldType);
-                    BeanDefinition fieldBeanDefinition = getBeanDefinition(beanDefinitions, fieldName, field);
+                    BeanDefinition fieldBeanDefinition =
+                        getBeanDefinition(beanDefinition, beanDefinitions, fieldName, field);
 
                     var objectToSet = scopesMap.get(fieldBeanDefinition.getScopeType())
                         .get(fieldBeanDefinition.getId(), () -> createBeanByDefinition(fieldBeanDefinition));
@@ -104,7 +106,8 @@ public class IoCContainer implements IIocContainer {
 
                 if (BeanDefinition.beanInterfacesTypesToDefinitions.containsKey(fieldType)) {
                     var beanDefinitions = BeanDefinition.beanInterfacesTypesToDefinitions.get(fieldType);
-                    BeanDefinition fieldBeanDefinition = getBeanDefinition(beanDefinitions, fieldName, field);
+                    BeanDefinition fieldBeanDefinition =
+                        getBeanDefinition(beanDefinition, beanDefinitions, fieldName, field);
 
                     var objectToSet = scopesMap.get(fieldBeanDefinition.getScopeType())
                         .get(fieldBeanDefinition.getId(), () -> createBeanByDefinition(fieldBeanDefinition));
@@ -123,6 +126,7 @@ public class IoCContainer implements IIocContainer {
     }
 
     private BeanDefinition getBeanDefinition(
+        BeanDefinition sourceBeanDefinition,
         List<BeanDefinition> beanDefinitions,
         String fieldName,
         Field field
@@ -150,6 +154,8 @@ public class IoCContainer implements IIocContainer {
             throw new IllegalStateException("No satisfied bean exception");
         }
 
+        dependencyGraph.addEdge(sourceBeanDefinition.getId(), beanDef.getId());
+
         return beanDef;
     }
 
@@ -157,4 +163,6 @@ public class IoCContainer implements IIocContainer {
         ScopeType.SINGLETON, new Singleton(),
         ScopeType.PROTOTYPE, new Prototype()
     );
+
+    public static DependencyGraph dependencyGraph = new DependencyGraph();
 }

@@ -23,6 +23,7 @@ public class InstanceMeta {
                 return candidate;
             }
         }
+
         throw new NoSuchMethodException("No constructor with " + args.size() + " arguments found in: " + beanClass);
     }
 

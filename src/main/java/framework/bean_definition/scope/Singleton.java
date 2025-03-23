@@ -1,12 +1,12 @@
 package framework.bean_definition.scope;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import framework.bean_definition.scope.utils.ObjectFactory;
 
 public class Singleton implements Scope {
-    private final Map<String, Object> beans = new HashMap<>();
+    private final Map<String, Object> beans = new ConcurrentHashMap<>();
 
     @Override
     public Object get(String beanName, ObjectFactory<?> objectFactory) {
