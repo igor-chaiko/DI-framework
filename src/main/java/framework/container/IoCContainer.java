@@ -122,7 +122,7 @@ public class IoCContainer implements IIocContainer {
         return object;
     }
 
-    private static BeanDefinition getBeanDefinition(
+    private BeanDefinition getBeanDefinition(
         List<BeanDefinition> beanDefinitions,
         String fieldName,
         Field field
