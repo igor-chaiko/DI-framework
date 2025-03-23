@@ -27,7 +27,7 @@ public class Property {
             }
         }
 
-        throw new IllegalStateException("Setter with name: " + setterName + "is not found");
+        throw new IllegalStateException("Setter with name: " + setterName + " is not found");
     }
 
     private Object convertToRequiredType(String value, Class<?> requiredType) {

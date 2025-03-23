@@ -49,6 +49,11 @@ public class BeanDefinition {
         beanTypesToDefinitions
             .computeIfAbsent(this.clazz, key -> new ArrayList<>())
             .add(this);
+        for (Class<?> interfaceClass : this.clazz.getInterfaces()) {
+            beanInterfacesTypesToDefinitions
+                .computeIfAbsent(interfaceClass, key -> new ArrayList<>())
+                .add(this);
+        }
     }
 
     private String capitalize(String name) {
@@ -73,4 +78,5 @@ public class BeanDefinition {
 
     public static Map<String, BeanDefinition> beanIdToDefinition = new HashMap<>();
     public static Map<Class<?>, List<BeanDefinition>> beanTypesToDefinitions = new HashMap<>();
+    public static Map<Class<?>, List<BeanDefinition>> beanInterfacesTypesToDefinitions = new HashMap<>();
 }

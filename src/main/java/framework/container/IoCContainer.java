@@ -1,5 +1,6 @@
 package framework.container;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,6 +11,8 @@ import framework.bean_definition.scope.Prototype;
 import framework.bean_definition.scope.Scope;
 import framework.bean_definition.scope.ScopeType;
 import framework.bean_definition.scope.Singleton;
+import framework.dependency_injection.Inject;
+import framework.dependency_injection.Qualifier;
 
 public class IoCContainer implements IIocContainer {
 
@@ -36,7 +39,7 @@ public class IoCContainer implements IIocContainer {
     }
 
     @Override
-    public <T> List<T> getAllBeansByType(Class<T> requiredType) throws Exception {
+    public <T> List<T> getAllBeansByType(Class<T> requiredType) {
         var beanDefinitions = BeanDefinition.beanTypesToDefinitions.get(requiredType);
 
         if (beanDefinitions == null) {
@@ -81,7 +84,73 @@ public class IoCContainer implements IIocContainer {
             property.injectProperty(object);
         }
 
+        for (var field: object.getClass().getDeclaredFields()) {
+            if (field.isAnnotationPresent(Inject.class)) {
+                var fieldType = field.getType();
+                var fieldName = field.getName();
+
+                if (BeanDefinition.beanTypesToDefinitions.containsKey(fieldType)) {
+                    var beanDefinitions = BeanDefinition.beanTypesToDefinitions.get(fieldType);
+                    BeanDefinition fieldBeanDefinition = getBeanDefinition(beanDefinitions, fieldName, field);
+
+                    var objectToSet = scopesMap.get(fieldBeanDefinition.getScopeType())
+                        .get(fieldBeanDefinition.getId(), () -> createBeanByDefinition(fieldBeanDefinition));
+
+                    field.setAccessible(true);
+                    field.set(object, objectToSet);
+
+                    continue;
+                }
+
+                if (BeanDefinition.beanInterfacesTypesToDefinitions.containsKey(fieldType)) {
+                    var beanDefinitions = BeanDefinition.beanInterfacesTypesToDefinitions.get(fieldType);
+                    BeanDefinition fieldBeanDefinition = getBeanDefinition(beanDefinitions, fieldName, field);
+
+                    var objectToSet = scopesMap.get(fieldBeanDefinition.getScopeType())
+                        .get(fieldBeanDefinition.getId(), () -> createBeanByDefinition(fieldBeanDefinition));
+
+                    field.setAccessible(true);
+                    field.set(object, objectToSet);
+
+                    continue;
+                }
+
+                throw new IllegalStateException("No bean with required type exception");
+            }
+        }
+
         return object;
+    }
+
+    private BeanDefinition getBeanDefinition(
+        List<BeanDefinition> beanDefinitions,
+        String fieldName,
+        Field field
+    ) {
+        BeanDefinition beanDef = null;
+
+        if (beanDefinitions.size() > 1) {
+            if (field.isAnnotationPresent(Qualifier.class)) {
+                var qualifier = field.getAnnotation(Qualifier.class);
+                fieldName = qualifier.name();
+            }
+
+            for (var beanDefinition : beanDefinitions) {
+                if (beanDefinition.getId().equals(fieldName)) {
+                    beanDef = beanDefinition;
+                    break;
+                }
+            }
+
+        } else {
+            beanDef = beanDefinitions.getFirst();
+        }
+
+        if (beanDef == null) {
+            throw new IllegalStateException("No satisfied bean exception");
+        }
+
+        return beanDef;
     }
 
     public static Map<ScopeType, Scope> scopesMap = Map.of(

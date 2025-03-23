@@ -1,20 +1,24 @@
 <config>
-    <bean id="id1" class="framework.test_beans.Car" scope="singleton" lazy-init="false">
+    <bean id="bmw" class="framework.test_beans.Bmw" scope="singleton" lazy-init="false">
         <properties>
-            <property name="maxSpeed" value="300"/>
+            <property name="coupe" value="true"/>
         </properties>
         <constructor>
-            <arg value="4"/>
-            <arg value="BMW"/>
+            <arg value="320"/>
+            <arg value="black"/>
         </constructor>
     </bean>
-    <bean id="id2" class="framework.test_beans.Car" scope="prototype" lazy-init="false">
+
+    <bean id="mercedes" class="framework.test_beans.Mercedes" scope="prototype" lazy-init="false">
         <properties>
-            <property name="maxSpeed" value="280"/>
+            <property name="coupe" value="false"/>
         </properties>
         <constructor>
-            <arg value="4"/>
-            <arg value="Mercedes"/>
+            <arg value="280"/>
+            <arg value="green"/>
         </constructor>
+    </bean>
+
+    <bean id="carOwner" class="framework.test_beans.CarOwner">
     </bean>
 </config>
