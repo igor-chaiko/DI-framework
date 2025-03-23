@@ -21,4 +21,14 @@
 
     <bean id="carOwner" class="framework.test_beans.CarOwner">
     </bean>
+
+    <bean id="x" class="framework.test_beans.X">
+        <properties>
+            <property name="info" value="some info"/>
+        </properties>
+    </bean>
+    <bean id="y" class="framework.test_beans.Y">
+    </bean>
+    <bean id="z" class="framework.test_beans.Z">
+    </bean>
 </config>
