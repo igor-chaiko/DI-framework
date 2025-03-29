@@ -5,8 +5,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class X {
-    @Inject
+//    @Inject
     private Y y;
+
+    public X(Y y) {
+        this.y = y;
+    }
 
     @Setter
     @Getter

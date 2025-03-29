@@ -10,7 +10,6 @@ import javax.xml.parsers.*;
 import java.io.*;
 
 import framework.bean_definition.BeanDefinition;
-import org.xml.sax.SAXException;
 
 public class XmlBeanDefinitionReaderImpl implements XmlBeanDefinitionReader {
     private final String pathToXmlCongih;
@@ -19,7 +18,7 @@ public class XmlBeanDefinitionReaderImpl implements XmlBeanDefinitionReader {
         this.pathToXmlCongih = pathToXmlConfig;
     }
 
-    private List<BeanDefinition> xmlConfigReader() throws ParserConfigurationException, IOException, SAXException, ClassNotFoundException, NoSuchMethodException {
+    private List<BeanDefinition> xmlConfigReader() throws Exception {
         List<BeanDefinition> beans = new ArrayList<>();
         File xmlFile = new File(this.pathToXmlCongih);
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -81,7 +80,7 @@ public class XmlBeanDefinitionReaderImpl implements XmlBeanDefinitionReader {
     public List<BeanDefinition> getBeanDefinitions() throws ClassNotFoundException, NoSuchMethodException {
         try {
             return xmlConfigReader();
-        } catch (ParserConfigurationException | IOException | SAXException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Error while reading xml config", e);
         }
     }

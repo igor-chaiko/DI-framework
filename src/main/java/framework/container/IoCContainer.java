@@ -30,7 +30,7 @@ public class IoCContainer implements IIocContainer {
 
     @Override
     public <T> T getBean(Class<T> requiredType) throws Exception {
-        var beanDefinitions = BeanDefinition.beanTypesToDefinitions.get(requiredType);
+        var beanDefinitions = BeanDefinition.beanClassesToDefinitions.get(requiredType);
 
         if (beanDefinitions == null || beanDefinitions.size() != 1) {
             throw new IllegalStateException();
@@ -41,7 +41,7 @@ public class IoCContainer implements IIocContainer {
 
     @Override
     public <T> List<T> getAllBeansByType(Class<T> requiredType) {
-        var beanDefinitions = BeanDefinition.beanTypesToDefinitions.get(requiredType);
+        var beanDefinitions = BeanDefinition.beanClassesToDefinitions.get(requiredType);
 
         if (beanDefinitions == null) {
             throw new IllegalStateException("No bean definitions found for type: " + requiredType);
@@ -66,7 +66,7 @@ public class IoCContainer implements IIocContainer {
             throw new IllegalStateException("Bean with specified id is not exist");
         }
 
-        return scopesMap.get(beanDefinition.getScopeType()).get(beanId, () -> createBeanByDefinition(beanDefinition));
+        return scopesMap.get(beanDefinition.getScopeType()).get(beanId, () -> createObjectByDefinition(beanDefinition));
     }
 
     private void initializeSingleton(BeanDefinition beanDefinition) throws Exception {
@@ -75,10 +75,11 @@ public class IoCContainer implements IIocContainer {
             throw new IllegalStateException();
         }
 
-        scope.get(beanDefinition.getId(), () -> createBeanByDefinition(beanDefinition));
+        scope.get(beanDefinition.getId(), () -> createObjectByDefinition(beanDefinition));
     }
 
-    private Object createBeanByDefinition(BeanDefinition beanDefinition) throws Exception {
+    // а был private и не static
+    public static Object createObjectByDefinition(BeanDefinition beanDefinition) throws Exception {
         var object = beanDefinition.getInstanceMeta().createInstance();
 
         for (var property : beanDefinition.getProperties()) {
@@ -87,48 +88,52 @@ public class IoCContainer implements IIocContainer {
 
         for (var field: object.getClass().getDeclaredFields()) {
             if (field.isAnnotationPresent(Inject.class)) {
-                var fieldType = field.getType();
-                var fieldName = field.getName();
-
-                if (BeanDefinition.beanTypesToDefinitions.containsKey(fieldType)) {
-                    var beanDefinitions = BeanDefinition.beanTypesToDefinitions.get(fieldType);
-                    BeanDefinition fieldBeanDefinition =
-                        getBeanDefinition(beanDefinition, beanDefinitions, fieldName, field);
-
-                    var objectToSet = scopesMap.get(fieldBeanDefinition.getScopeType())
-                        .get(fieldBeanDefinition.getId(), () -> createBeanByDefinition(fieldBeanDefinition));
-
-                    field.setAccessible(true);
-                    field.set(object, objectToSet);
-
-                    continue;
-                }
-
-                if (BeanDefinition.beanInterfacesTypesToDefinitions.containsKey(fieldType)) {
-                    var beanDefinitions = BeanDefinition.beanInterfacesTypesToDefinitions.get(fieldType);
-                    BeanDefinition fieldBeanDefinition =
-                        getBeanDefinition(beanDefinition, beanDefinitions, fieldName, field);
-
-                    var objectToSet = scopesMap.get(fieldBeanDefinition.getScopeType())
-                        .get(fieldBeanDefinition.getId(), () -> createBeanByDefinition(fieldBeanDefinition));
-
-                    field.setAccessible(true);
-                    field.set(object, objectToSet);
-
-                    continue;
-                }
-
-                throw new IllegalStateException("No bean with required type exception");
+                injectField(object, field, beanDefinition);
             }
         }
 
         return object;
     }
 
-    private BeanDefinition getBeanDefinition(
+    private static void injectField(Object objectToSetField, Field field, BeanDefinition beanDefinition) throws Exception {
+        var fieldType = field.getType();
+        var fieldName = field.getName();
+
+        if (BeanDefinition.beanClassesToDefinitions.containsKey(fieldType)) {
+            var beanDefinitions = BeanDefinition.beanClassesToDefinitions.get(fieldType);
+            BeanDefinition fieldBeanDefinition =
+                getBeanDefinition(beanDefinition, beanDefinitions, fieldName, field);
+
+            var objectToSet = scopesMap.get(fieldBeanDefinition.getScopeType())
+                .get(fieldBeanDefinition.getId(), () -> createObjectByDefinition(fieldBeanDefinition));
+
+            field.setAccessible(true);
+            field.set(objectToSetField, objectToSet);
+
+            return;
+        }
+
+        if (BeanDefinition.beanInterfacesToDefinitions.containsKey(fieldType)) {
+            var beanDefinitions = BeanDefinition.beanInterfacesToDefinitions.get(fieldType);
+            BeanDefinition fieldBeanDefinition =
+                getBeanDefinition(beanDefinition, beanDefinitions, fieldName, field);
+
+            var objectToSet = scopesMap.get(fieldBeanDefinition.getScopeType())
+                .get(fieldBeanDefinition.getId(), () -> createObjectByDefinition(fieldBeanDefinition));
+
+            field.setAccessible(true);
+            field.set(objectToSetField, objectToSet);
+
+            return;
+        }
+
+        throw new IllegalStateException("No bean with required type exception");
+    }
+
+    private static BeanDefinition getBeanDefinition(
         BeanDefinition sourceBeanDefinition,
         List<BeanDefinition> beanDefinitions,
-        String fieldName,
+        String fieldName, // если не указан Qualifier, используем его
         Field field
     ) {
         BeanDefinition beanDef = null;
@@ -145,17 +150,15 @@ public class IoCContainer implements IIocContainer {
                     break;
                 }
             }
-
         } else {
             beanDef = beanDefinitions.getFirst();
         }
 
         if (beanDef == null) {
-            throw new IllegalStateException("No satisfied bean exception");
+            throw new IllegalStateException("No satisfied bean to inject exception");
         }
 
         dependencyGraph.addEdge(sourceBeanDefinition.getId(), beanDef.getId());
-
         return beanDef;
     }
 
