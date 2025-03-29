@@ -9,9 +9,9 @@ public class Main {
         var container = new IoCContainer("src/main/resources/config.xml");
 
         var carOwner = container.getBean(CarOwner.class);
-        carOwner.myCarInfo();
+        carOwner.carOwnersInfo();
 
         var x = container.getBean(X.class);
-        System.out.println("\n" + x.getInfo());
+        System.out.println(x.getInfo());
     }
 }

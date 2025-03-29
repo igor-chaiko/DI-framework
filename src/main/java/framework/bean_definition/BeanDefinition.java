@@ -28,7 +28,7 @@ public class BeanDefinition {
         String initMethodName,
         Map<String, String > properties,
         List<String> constructorArgs
-    ) throws ClassNotFoundException, NoSuchMethodException {
+    ) throws Exception {
         this.id = id != null ? id : UUID.randomUUID().toString();
         this.clazz = Class.forName(className);
         this.scopeType = (scopeType == null) ? ScopeType.SINGLETON : getScopeType(scopeType);
@@ -39,18 +39,18 @@ public class BeanDefinition {
             this.properties.add(new Property(clazz, setter, value));
         });
 
-        this.instanceMeta = new InstanceMeta(this.clazz, constructorArgs == null ? List.of() : constructorArgs);
+        this.instanceMeta = new InstanceMeta(this.clazz, constructorArgs == null ? List.of() : constructorArgs, id);
 
         if (beanIdToDefinition.containsKey(this.id)) {
             throw new IllegalArgumentException("Bean Id must be unique");
         }
 
         beanIdToDefinition.put(this.id, this);
-        beanTypesToDefinitions
+        beanClassesToDefinitions
             .computeIfAbsent(this.clazz, key -> new ArrayList<>())
             .add(this);
         for (Class<?> interfaceClass : this.clazz.getInterfaces()) {
-            beanInterfacesTypesToDefinitions
+            beanInterfacesToDefinitions
                 .computeIfAbsent(interfaceClass, key -> new ArrayList<>())
                 .add(this);
         }
@@ -77,6 +77,6 @@ public class BeanDefinition {
     }
 
     public static Map<String, BeanDefinition> beanIdToDefinition = new HashMap<>();
-    public static Map<Class<?>, List<BeanDefinition>> beanTypesToDefinitions = new HashMap<>();
-    public static Map<Class<?>, List<BeanDefinition>> beanInterfacesTypesToDefinitions = new HashMap<>();
+    public static Map<Class<?>, List<BeanDefinition>> beanClassesToDefinitions = new HashMap<>();
+    public static Map<Class<?>, List<BeanDefinition>> beanInterfacesToDefinitions = new HashMap<>();
 }

@@ -1,38 +1,112 @@
 package framework.bean_definition.utils;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InstanceMeta {
-    private final Constructor<?> constructor;
-    private final List<Object> constructorArgs;
+import framework.bean_definition.BeanDefinition;
+import framework.dependency_injection.Inject;
+import framework.dependency_injection.Qualifier;
 
-    public InstanceMeta(Class<?> beanClass, List<String> constructorArgs) throws NoSuchMethodException {
-        this.constructor = findMatchingConstructor(beanClass, constructorArgs);
-        this.constructorArgs = convertConstructorArgs(constructor.getParameterTypes(), constructorArgs);
+import static framework.bean_definition.BeanDefinition.beanClassesToDefinitions;
+import static framework.bean_definition.BeanDefinition.beanInterfacesToDefinitions;
+import static framework.container.IoCContainer.createObjectByDefinition;
+import static framework.container.IoCContainer.dependencyGraph;
+import static framework.container.IoCContainer.scopesMap;
+
+public class InstanceMeta {
+    private final Class<?> beanClass;
+    private final List<String> constructorConfigArgs;
+    private final String beanId;
+    private final List<Object> argsToInvokeConstructorWith = new ArrayList<>();
+    private Constructor<?> constructor = null;
+
+    public InstanceMeta(Class<?> beanClass, List<String> constructorConfigArgs, String beanId) {
+        this.beanClass = beanClass;
+        this.constructorConfigArgs = constructorConfigArgs;
+        this.beanId = beanId;
     }
 
     public Object createInstance() throws Exception {
-        return constructor.newInstance(constructorArgs.toArray());
+        if (constructor == null) {
+            this.constructor = findMatchingConstructor();
+        }
+        return constructor.newInstance(argsToInvokeConstructorWith.toArray());
     }
 
-    private Constructor<?> findMatchingConstructor(Class<?> beanClass, List<String> args) throws NoSuchMethodException {
-        for (Constructor<?> candidate : beanClass.getConstructors()) {
-            if (candidate.getParameterCount() == args.size()) {
-                return candidate;
+    private Constructor<?> findMatchingConstructor() throws Exception {
+        var constructor = findSuitableConstructor(beanClass.getConstructors());
+        var constructorParams = constructor.getParameters();
+        var configArgsPointer = 0;
+
+        for (var param: constructorParams) {
+            if (beanClassesToDefinitions.containsKey(param.getType())) {
+                addBeanToConstructorArgs(beanClassesToDefinitions.get(param.getType()), param);
+            } else if (beanInterfacesToDefinitions.containsKey(param.getType())) {
+                addBeanToConstructorArgs(beanInterfacesToDefinitions.get(param.getType()), param);
+            } else {
+                this.argsToInvokeConstructorWith.add(convertStringToType(
+                    constructorConfigArgs.get(configArgsPointer++),
+                    param.getType()
+                ));
             }
         }
 
-        throw new NoSuchMethodException("No constructor with " + args.size() + " arguments found in: " + beanClass);
+        return constructor;
     }
 
-    private List<Object> convertConstructorArgs(Class<?>[] targetTypes, List<String> stringArgs) {
-        List<Object> result = new ArrayList<>();
-        for (int i = 0; i < targetTypes.length; i++) {
-            result.add(convertStringToType(stringArgs.get(i), targetTypes[i]));
+    private Constructor<?> findSuitableConstructor(Constructor<?>[] constructors) {
+        var constructor = constructors[0];
+        var constructorFound = false;
+
+        if (constructors.length > 1) {
+            for (var candidate: constructors) {
+                if (candidate.isAnnotationPresent(Inject.class)) {
+                    if (constructorFound) {
+                        throw new IllegalStateException("No unique constructor exception");
+                    }
+                    constructor = candidate;
+                    constructorFound = true;
+                }
+            }
         }
-        return result;
+
+        return constructor;
+    }
+
+    private void addBeanToConstructorArgs(
+        List<BeanDefinition> targetBeanDefinitions,
+        Parameter parameter
+    ) throws Exception {
+        String fieldName;
+        BeanDefinition beanDef = null;
+
+        if (parameter.isAnnotationPresent(Qualifier.class)) {
+            var qualifier = parameter.getAnnotation(Qualifier.class);
+            fieldName = qualifier.name();
+
+            for (var beanDefinition : targetBeanDefinitions) {
+                if (beanDefinition.getId().equals(fieldName)) {
+                    beanDef = beanDefinition;
+                    break;
+                }
+            }
+        } else {
+            if (targetBeanDefinitions.size() == 1) {
+                beanDef = targetBeanDefinitions.getFirst();
+            }
+        }
+
+        if (beanDef == null) {
+            throw new IllegalStateException("No satisfied bean to inject throw constructor exception");
+        }
+
+        dependencyGraph.addEdge(beanId, beanDef.getId());
+        BeanDefinition finalBeanDef = beanDef;
+        this.argsToInvokeConstructorWith.add(
+            scopesMap.get(beanDef.getScopeType()).get(beanDef.getId(), () -> createObjectByDefinition(finalBeanDef))
+        );
     }
 
     private Object convertStringToType(String arg, Class<?> targetType) {

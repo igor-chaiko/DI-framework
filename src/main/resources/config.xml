@@ -20,6 +20,10 @@
     </bean>
 
     <bean id="carOwner" class="framework.test_beans.CarOwner">
+        <constructor>
+            <arg value="John"/>
+            <arg value="18"/>
+        </constructor>
     </bean>
 
     <bean id="x" class="framework.test_beans.X">
