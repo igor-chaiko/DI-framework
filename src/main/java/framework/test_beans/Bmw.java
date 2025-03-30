@@ -9,9 +9,12 @@ public class Bmw implements SimpleCar {
     private final String color;
 
     @Setter
-    private boolean coupe;
+    private Boolean coupe;
+    @Setter
+    private Integer numOfOwners;
 
     public Bmw(int maxSpeed, String color) {
+//        System.out.println("\n---------------------------------------------------------\n");
         this.maxSpeed = maxSpeed;
         this.color = color;
     }
@@ -24,7 +27,8 @@ public class Bmw implements SimpleCar {
             + color
             + " color\n"
             + "developing maximum speed of: "
-            + maxSpeed;
+            + maxSpeed
+            + " with " + numOfOwners + " owners";
         System.out.println(info);
     }
 }

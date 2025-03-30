@@ -1,7 +1,8 @@
 <config>
-    <bean id="bmw" class="framework.test_beans.Bmw" scope="singleton" lazy-init="false">
+    <bean id="bmw" class="framework.test_beans.Bmw" scope="singleton" lazy-init="true">
         <properties>
             <property name="coupe" value="true"/>
+            <property name="numOfOwners" value="4"/>
         </properties>
         <constructor>
             <arg value="320"/>
@@ -19,20 +20,20 @@
         </constructor>
     </bean>
 
-    <bean id="carOwner" class="framework.test_beans.CarOwner">
+    <bean id="carOwner" class="framework.test_beans.CarOwner" lazy-init="false">
         <constructor>
             <arg value="John"/>
             <arg value="18"/>
         </constructor>
     </bean>
 
-    <bean id="x" class="framework.test_beans.X">
+    <bean id="x" class="framework.test_beans.X" lazy-init="false">
         <properties>
             <property name="info" value="some info"/>
         </properties>
     </bean>
-    <bean id="y" class="framework.test_beans.Y">
+    <bean id="y" class="framework.test_beans.Y" lazy-init="false">
     </bean>
-    <bean id="z" class="framework.test_beans.Z">
+    <bean id="z" class="framework.test_beans.Z" lazy-init="true">
     </bean>
 </config>

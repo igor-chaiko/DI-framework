@@ -1,4 +1,4 @@
-package framework.bean_definition.scope.utils;
+package framework.bean.scope.utils;
 
 @FunctionalInterface
 public interface ObjectFactory<T> {

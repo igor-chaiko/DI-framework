@@ -1,31 +1,34 @@
-package framework.bean_definition.utils;
+package framework.bean.bean_definition.meta;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
-import framework.bean_definition.BeanDefinition;
-import framework.dependency_injection.Inject;
-import framework.dependency_injection.Qualifier;
+import framework.bean.bean_definition.BeanDefinition;
+import framework.dependency_injection.annotaitions.Inject;
+import framework.dependency_injection.annotaitions.Qualifier;
+import lombok.Getter;
 
-import static framework.bean_definition.BeanDefinition.beanClassesToDefinitions;
-import static framework.bean_definition.BeanDefinition.beanInterfacesToDefinitions;
+import static framework.bean.bean_definition.BeanDefinition.beanClassesToDefinitions;
+import static framework.bean.bean_definition.BeanDefinition.beanInterfacesToDefinitions;
 import static framework.container.IoCContainer.createObjectByDefinition;
 import static framework.container.IoCContainer.dependencyGraph;
 import static framework.container.IoCContainer.scopesMap;
 
 public class InstanceMeta {
+    @Getter
     private final Class<?> beanClass;
     private final List<String> constructorConfigArgs;
-    private final String beanId;
+    private final BeanDefinition beanDefinition;
+    @Getter
     private final List<Object> argsToInvokeConstructorWith = new ArrayList<>();
     private Constructor<?> constructor = null;
 
-    public InstanceMeta(Class<?> beanClass, List<String> constructorConfigArgs, String beanId) {
+    public InstanceMeta(Class<?> beanClass, List<String> constructorConfigArgs, BeanDefinition beanDefinition) {
         this.beanClass = beanClass;
         this.constructorConfigArgs = constructorConfigArgs;
-        this.beanId = beanId;
+        this.beanDefinition = beanDefinition;
     }
 
     public Object createInstance() throws Exception {
@@ -33,6 +36,13 @@ public class InstanceMeta {
             this.constructor = findMatchingConstructor();
         }
         return constructor.newInstance(argsToInvokeConstructorWith.toArray());
+    }
+
+    public Constructor<?> getConstructor() throws Exception {
+        if (this.constructor == null) {
+            this.constructor = findMatchingConstructor();
+        }
+        return constructor;
     }
 
     private Constructor<?> findMatchingConstructor() throws Exception {
@@ -102,7 +112,7 @@ public class InstanceMeta {
             throw new IllegalStateException("No satisfied bean to inject throw constructor exception");
         }
 
-        dependencyGraph.addEdge(beanId, beanDef.getId());
+        dependencyGraph.addEdge(beanDefinition, beanDef);
         BeanDefinition finalBeanDef = beanDef;
         this.argsToInvokeConstructorWith.add(
             scopesMap.get(beanDef.getScopeType()).get(beanDef.getId(), () -> createObjectByDefinition(finalBeanDef))

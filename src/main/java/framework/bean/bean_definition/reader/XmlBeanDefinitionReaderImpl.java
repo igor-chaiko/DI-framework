@@ -1,4 +1,4 @@
-package framework.bean_definition.reader;
+package framework.bean.bean_definition.reader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,7 +9,7 @@ import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import java.io.*;
 
-import framework.bean_definition.BeanDefinition;
+import framework.bean.bean_definition.BeanDefinition;
 
 public class XmlBeanDefinitionReaderImpl implements XmlBeanDefinitionReader {
     private final String pathToXmlCongih;
@@ -34,6 +34,7 @@ public class XmlBeanDefinitionReaderImpl implements XmlBeanDefinitionReader {
             String className = getAttrOrNull(bean, "class");
             String scope = getAttrOrDefault(bean, "scope", "singleton");
             String initMethod = getAttrOrNull(bean, "init-method");
+            boolean lazyInit = Boolean.parseBoolean(getAttrOrDefault(bean, "lazy-init", "false"));
 
             Map<String, String> properties = new HashMap<>();
             NodeList propertiesList = bean.getElementsByTagName("property");
@@ -60,7 +61,8 @@ public class XmlBeanDefinitionReaderImpl implements XmlBeanDefinitionReader {
                 }
             }
 
-            BeanDefinition beanDef = new BeanDefinition(id, className, scope, initMethod, properties, constructorArgs);
+            BeanDefinition beanDef =
+                new BeanDefinition(id, className, scope, initMethod, properties, constructorArgs, lazyInit);
             beans.add(beanDef);
         }
 
