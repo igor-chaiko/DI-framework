@@ -1,4 +1,4 @@
-package framework.bean_definition.utils;
+package framework.bean.bean_definition.meta;
 
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;

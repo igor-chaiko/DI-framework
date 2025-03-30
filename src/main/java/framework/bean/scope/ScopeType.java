@@ -1,4 +1,4 @@
-package framework.bean_definition.scope;
+package framework.bean.scope;
 
 public enum ScopeType {
     SINGLETON,

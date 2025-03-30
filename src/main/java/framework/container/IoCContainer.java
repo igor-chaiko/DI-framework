@@ -1,20 +1,25 @@
 package framework.container;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import framework.bean_definition.BeanDefinition;
-import framework.bean_definition.cyclic_dependencies.DependencyGraph;
-import framework.bean_definition.reader.XmlBeanDefinitionReaderImpl;
-import framework.bean_definition.scope.Prototype;
-import framework.bean_definition.scope.Scope;
-import framework.bean_definition.scope.ScopeType;
-import framework.bean_definition.scope.Singleton;
-import framework.dependency_injection.Inject;
-import framework.dependency_injection.Qualifier;
+import framework.bean.bean_definition.BeanDefinition;
+import framework.bean.cyclic_dependencies.DependencyGraph;
+import framework.bean.lazy_init.LazyInitCallback;
+import framework.bean.bean_definition.reader.XmlBeanDefinitionReaderImpl;
+import framework.bean.scope.Prototype;
+import framework.bean.scope.Scope;
+import framework.bean.scope.ScopeType;
+import framework.bean.scope.Singleton;
+import framework.dependency_injection.annotaitions.Inject;
+import framework.dependency_injection.annotaitions.Qualifier;
+import net.sf.cglib.proxy.Enhancer;
 
+@SuppressWarnings("unchecked")
 public class IoCContainer implements IIocContainer {
 
     public IoCContainer(String pathToXmlConfig) throws Exception {
@@ -80,6 +85,13 @@ public class IoCContainer implements IIocContainer {
 
     // а был private и не static
     public static Object createObjectByDefinition(BeanDefinition beanDefinition) throws Exception {
+        if (beanDefinition.getLazyInit()) {
+            return createLazyProxy(beanDefinition.getInstanceMeta().getBeanClass(), beanDefinition);
+        }
+        return instantiate(beanDefinition);
+    }
+
+    public static Object instantiate(BeanDefinition beanDefinition) throws Exception {
         var object = beanDefinition.getInstanceMeta().createInstance();
 
         for (var property : beanDefinition.getProperties()) {
@@ -95,7 +107,8 @@ public class IoCContainer implements IIocContainer {
         return object;
     }
 
-    private static void injectField(Object objectToSetField, Field field, BeanDefinition beanDefinition) throws Exception {
+    private static void injectField(Object objectToSetField, Field field, BeanDefinition beanDefinition)
+        throws Exception {
         var fieldType = field.getType();
         var fieldName = field.getName();
 
@@ -104,11 +117,11 @@ public class IoCContainer implements IIocContainer {
             BeanDefinition fieldBeanDefinition =
                 getBeanDefinition(beanDefinition, beanDefinitions, fieldName, field);
 
-            var objectToSet = scopesMap.get(fieldBeanDefinition.getScopeType())
+            var objectToInject = scopesMap.get(fieldBeanDefinition.getScopeType())
                 .get(fieldBeanDefinition.getId(), () -> createObjectByDefinition(fieldBeanDefinition));
 
             field.setAccessible(true);
-            field.set(objectToSetField, objectToSet);
+            field.set(objectToSetField, objectToInject);
 
             return;
         }
@@ -118,16 +131,34 @@ public class IoCContainer implements IIocContainer {
             BeanDefinition fieldBeanDefinition =
                 getBeanDefinition(beanDefinition, beanDefinitions, fieldName, field);
 
-            var objectToSet = scopesMap.get(fieldBeanDefinition.getScopeType())
+            var objectToInject = scopesMap.get(fieldBeanDefinition.getScopeType())
                 .get(fieldBeanDefinition.getId(), () -> createObjectByDefinition(fieldBeanDefinition));
 
             field.setAccessible(true);
-            field.set(objectToSetField, objectToSet);
+            field.set(objectToSetField, objectToInject);
 
             return;
         }
 
         throw new IllegalStateException("No bean with required type exception");
+    }
+
+    private static Object createLazyProxy(Class<?> type, BeanDefinition beanDefinition) throws Exception {
+        Enhancer enhancer = new Enhancer();
+        if (type.isInterface()) {
+            enhancer.setInterfaces(new Class<?>[] { type });
+        } else {
+            enhancer.setSuperclass(type);
+        }
+        enhancer.setCallback(new LazyInitCallback(beanDefinition));
+
+        Constructor<?> constructor = beanDefinition.getInstanceMeta().getConstructor();
+        Object[] constructorArgs = beanDefinition.getInstanceMeta().getArgsToInvokeConstructorWith().toArray(); //new Object[0]
+
+        Class<?>[] argTypes = Arrays.stream(constructor.getParameterTypes())
+            .toArray(Class<?>[]::new);
+
+        return enhancer.create(argTypes, constructorArgs);
     }
 
     private static BeanDefinition getBeanDefinition(
@@ -158,7 +189,7 @@ public class IoCContainer implements IIocContainer {
             throw new IllegalStateException("No satisfied bean to inject exception");
         }
 
-        dependencyGraph.addEdge(sourceBeanDefinition.getId(), beanDef.getId());
+        dependencyGraph.addEdge(sourceBeanDefinition, beanDef);
         return beanDef;
     }
 

@@ -1,15 +1,10 @@
-package framework.bean_definition.scope;
+package framework.bean.scope;
 
-import framework.bean_definition.scope.utils.ObjectFactory;
+import framework.bean.scope.utils.ObjectFactory;
 
 public class Prototype implements Scope {
     @Override
     public Object get(String beanName, ObjectFactory<?> objectFactory) throws Exception {
         return objectFactory.getObject();
-    }
-
-    @Override
-    public ScopeType getType() {
-        return ScopeType.PROTOTYPE;
     }
 }

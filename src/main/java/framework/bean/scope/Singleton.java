@@ -1,9 +1,9 @@
-package framework.bean_definition.scope;
+package framework.bean.scope;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import framework.bean_definition.scope.utils.ObjectFactory;
+import framework.bean.scope.utils.ObjectFactory;
 
 public class Singleton implements Scope {
     private final Map<String, Object> beans = new ConcurrentHashMap<>();
@@ -17,10 +17,5 @@ public class Singleton implements Scope {
                 throw new RuntimeException(e);
             }
         });
-    }
-
-    @Override
-    public ScopeType getType() {
-        return ScopeType.SINGLETON;
     }
 }

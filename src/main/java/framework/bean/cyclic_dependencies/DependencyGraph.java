@@ -1,4 +1,4 @@
-package framework.bean_definition.cyclic_dependencies;
+package framework.bean.cyclic_dependencies;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,13 +8,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import framework.bean.bean_definition.BeanDefinition;
+import framework.bean.scope.ScopeType;
+
 public class DependencyGraph {
     private final Map<String, List<String>> adjacencyList = new HashMap<>();
 
-    public void addEdge(String from, String to) {
-        adjacencyList.computeIfAbsent(from, k -> new ArrayList<>()).add(to);
+    public void addEdge(BeanDefinition from, BeanDefinition to) {
+        adjacencyList.computeIfAbsent(from.getId(), k -> new ArrayList<>()).add(to.getId());
         if (hasCycle()) {
-            throw new IllegalStateException("Cyclic dependency detected: " + from + " -> " + to);
+            if (from.getScopeType() == ScopeType.SINGLETON && to.getScopeType() == ScopeType.SINGLETON &&
+                (from.getLazyInit() || to.getLazyInit())) {
+                return;
+            }
+
+            throw new IllegalStateException("Cyclic dependency detected: " + from.getId() + " -> " + to.getId());
         }
     }
 

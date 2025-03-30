@@ -1,12 +1,12 @@
 package framework.test_beans;
 
-import framework.dependency_injection.Inject;
+import framework.dependency_injection.annotaitions.Inject;
 
 public class Y {
-//    @Inject
+    @Inject
     private Z z;
 
-    public Y(Z z) {
-        this.z = z;
-    }
+//    public Y(Z z) {
+//        this.z = z;
+//    }
 }
