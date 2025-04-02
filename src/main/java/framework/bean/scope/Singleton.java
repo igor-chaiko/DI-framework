@@ -18,4 +18,9 @@ public class Singleton implements Scope {
             }
         });
     }
+
+    @Override
+    public int getBeansCount() {
+        return beans.keySet().size();
+    }
 }

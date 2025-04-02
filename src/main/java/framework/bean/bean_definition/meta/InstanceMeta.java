@@ -12,9 +12,9 @@ import lombok.Getter;
 
 import static framework.bean.bean_definition.BeanDefinition.beanClassesToDefinitions;
 import static framework.bean.bean_definition.BeanDefinition.beanInterfacesToDefinitions;
-import static framework.container.IoCContainer.createObjectByDefinition;
-import static framework.container.IoCContainer.dependencyGraph;
-import static framework.container.IoCContainer.scopesMap;
+import static framework.container.IoCContainerImpl.createObjectByDefinition;
+import static framework.container.IoCContainerImpl.dependencyGraph;
+import static framework.container.IoCContainerImpl.scopesMap;
 
 public class InstanceMeta {
     @Getter

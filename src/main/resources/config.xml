@@ -1,5 +1,5 @@
 <config>
-    <bean id="bmw" class="framework.test_beans.Bmw" scope="singleton" lazy-init="true">
+    <bean id="bmw" class="framework.test_beans.testing.Bmw" scope="singleton" lazy-init="true">
         <properties>
             <property name="coupe" value="true"/>
             <property name="numOfOwners" value="4"/>
@@ -9,8 +9,7 @@
             <arg value="black"/>
         </constructor>
     </bean>
-
-    <bean id="mercedes" class="framework.test_beans.Mercedes" scope="prototype" lazy-init="false">
+    <bean id="mercedes" class="framework.test_beans.testing.Mercedes" scope="prototype" lazy-init="false">
         <properties>
             <property name="coupe" value="false"/>
         </properties>
@@ -19,21 +18,31 @@
             <arg value="green"/>
         </constructor>
     </bean>
-
-    <bean id="carOwner" class="framework.test_beans.CarOwner" lazy-init="false">
+    <bean id="carOwner" class="framework.test_beans.testing.CarOwner" lazy-init="false">
         <constructor>
             <arg value="John"/>
             <arg value="18"/>
         </constructor>
     </bean>
 
-    <bean id="x" class="framework.test_beans.X" lazy-init="false">
+    <bean id="x" class="framework.test_beans.testing.X" lazy-init="false">
         <properties>
             <property name="info" value="some info"/>
         </properties>
     </bean>
-    <bean id="y" class="framework.test_beans.Y" lazy-init="false">
+    <bean id="y" class="framework.test_beans.testing.Y" lazy-init="false">
     </bean>
-    <bean id="z" class="framework.test_beans.Z" lazy-init="true">
+    <bean id="z" class="framework.test_beans.testing.Z" lazy-init="true">
+    </bean>
+
+    <bean id="thread-1" class="framework.test_beans.testing.ThreadLocalExample" scope="thread-local">
+        <properties>
+            <property name="name" value="thread1"/>
+        </properties>
+    </bean>
+    <bean id="thread-2" class="framework.test_beans.testing.ThreadLocalExample" scope="thread-local">
+        <properties>
+            <property name="name" value="thread2"/>
+        </properties>
     </bean>
 </config>

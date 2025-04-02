@@ -7,4 +7,9 @@ public class Prototype implements Scope {
     public Object get(String beanName, ObjectFactory<?> objectFactory) throws Exception {
         return objectFactory.getObject();
     }
+
+    @Override
+    public int getBeansCount() {
+        return 0;
+    }
 }

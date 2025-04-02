@@ -1,6 +1,5 @@
-package framework.test_beans;
+package framework.test_beans.testing;
 
-import framework.dependency_injection.annotaitions.Inject;
 import framework.dependency_injection.annotaitions.Qualifier;
 import lombok.Getter;
 

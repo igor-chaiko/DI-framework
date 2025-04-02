@@ -74,6 +74,9 @@ public class BeanDefinition {
             case "prototype" -> {
                 return ScopeType.PROTOTYPE;
             }
+            case "thread-local" -> {
+                return ScopeType.THREAD_LOCAL;
+            }
         }
 
         throw new IllegalStateException("Unsupported scope type");

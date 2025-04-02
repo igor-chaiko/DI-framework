@@ -1,5 +1,6 @@
-package framework.test_beans;
+package framework.test_beans.testing;
 
+import framework.dependency_injection.annotaitions.Inject;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,6 +8,9 @@ import lombok.Setter;
 public class Bmw implements SimpleCar {
     private final int maxSpeed;
     private final String color;
+
+    @Inject
+    private CarOwner carOwner;
 
     @Setter
     private Boolean coupe;

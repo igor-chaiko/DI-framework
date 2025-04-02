@@ -1,28 +1,27 @@
 package framework.container;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import framework.bean.bean_definition.BeanDefinition;
-import framework.bean.cyclic_dependencies.DependencyGraph;
-import framework.bean.lazy_init.LazyInitCallback;
 import framework.bean.bean_definition.reader.XmlBeanDefinitionReaderImpl;
+import framework.bean.cyclic_dependencies.DependencyGraph;
 import framework.bean.scope.Prototype;
 import framework.bean.scope.Scope;
 import framework.bean.scope.ScopeType;
 import framework.bean.scope.Singleton;
+import framework.bean.scope.ThreadLocal;
 import framework.dependency_injection.annotaitions.Inject;
 import framework.dependency_injection.annotaitions.Qualifier;
-import net.sf.cglib.proxy.Enhancer;
+
+import static framework.bean.lazy_init.LazyInitCallback.createLazyProxy;
 
 @SuppressWarnings("unchecked")
-public class IoCContainer implements IIocContainer {
+public class IoCContainerImpl implements IIocContainer {
 
-    public IoCContainer(String pathToXmlConfig) throws Exception {
+    public IoCContainerImpl(String pathToXmlConfig) throws Exception {
         var xmlBeanDefinitionReader = new XmlBeanDefinitionReaderImpl(pathToXmlConfig);
         List<BeanDefinition> beanDefinitions = xmlBeanDefinitionReader.getBeanDefinitions();
 
@@ -41,7 +40,7 @@ public class IoCContainer implements IIocContainer {
             throw new IllegalStateException();
         }
 
-        return (T) getBean(beanDefinitions.get(0).getId());
+        return (T) getBean(beanDefinitions.getFirst().getId());
     }
 
     @Override
@@ -68,10 +67,20 @@ public class IoCContainer implements IIocContainer {
         var beanDefinition = BeanDefinition.beanIdToDefinition.get(beanId);
 
         if (beanDefinition == null) {
-            throw new IllegalStateException("Bean with specified id is not exist");
+            throw new IllegalStateException("Bean with specified id is not found");
         }
 
         return scopesMap.get(beanDefinition.getScopeType()).get(beanId, () -> createObjectByDefinition(beanDefinition));
+    }
+
+    @Override
+    public int getObjectsUnderContainerControlCount() {
+        int count = 0;
+        for (var entry: scopesMap.entrySet()) {
+            count += entry.getValue().getBeansCount();
+        }
+
+        return count;
     }
 
     private void initializeSingleton(BeanDefinition beanDefinition) throws Exception {
@@ -83,7 +92,6 @@ public class IoCContainer implements IIocContainer {
         scope.get(beanDefinition.getId(), () -> createObjectByDefinition(beanDefinition));
     }
 
-    // а был private и не static
     public static Object createObjectByDefinition(BeanDefinition beanDefinition) throws Exception {
         if (beanDefinition.getLazyInit()) {
             return createLazyProxy(beanDefinition.getInstanceMeta().getBeanClass(), beanDefinition);
@@ -98,7 +106,7 @@ public class IoCContainer implements IIocContainer {
             property.injectProperty(object);
         }
 
-        for (var field: object.getClass().getDeclaredFields()) {
+        for (var field : object.getClass().getDeclaredFields()) {
             if (field.isAnnotationPresent(Inject.class)) {
                 injectField(object, field, beanDefinition);
             }
@@ -143,24 +151,6 @@ public class IoCContainer implements IIocContainer {
         throw new IllegalStateException("No bean with required type exception");
     }
 
-    private static Object createLazyProxy(Class<?> type, BeanDefinition beanDefinition) throws Exception {
-        Enhancer enhancer = new Enhancer();
-        if (type.isInterface()) {
-            enhancer.setInterfaces(new Class<?>[] { type });
-        } else {
-            enhancer.setSuperclass(type);
-        }
-        enhancer.setCallback(new LazyInitCallback(beanDefinition));
-
-        Constructor<?> constructor = beanDefinition.getInstanceMeta().getConstructor();
-        Object[] constructorArgs = beanDefinition.getInstanceMeta().getArgsToInvokeConstructorWith().toArray(); //new Object[0]
-
-        Class<?>[] argTypes = Arrays.stream(constructor.getParameterTypes())
-            .toArray(Class<?>[]::new);
-
-        return enhancer.create(argTypes, constructorArgs);
-    }
-
     private static BeanDefinition getBeanDefinition(
         BeanDefinition sourceBeanDefinition,
         List<BeanDefinition> beanDefinitions,
@@ -195,7 +185,8 @@ public class IoCContainer implements IIocContainer {
 
     public static Map<ScopeType, Scope> scopesMap = Map.of(
         ScopeType.SINGLETON, new Singleton(),
-        ScopeType.PROTOTYPE, new Prototype()
+        ScopeType.PROTOTYPE, new Prototype(),
+        ScopeType.THREAD_LOCAL, new ThreadLocal()
     );
 
     public static DependencyGraph dependencyGraph = new DependencyGraph();
