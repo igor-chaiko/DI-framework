@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class Bmw implements SimpleCar {
+public class Bmw implements SimpleCarr {
     private final int maxSpeed;
     private final String color;
 

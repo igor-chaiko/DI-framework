@@ -7,12 +7,12 @@ public class CarOwner {
     @Getter
 //    @Inject
 //    @Qualifier(name = "bmw")
-    private SimpleCar car1;
+    private SimpleCarr car1;
     private String carOwnerName;
     private int carOwnerAge;
 
 //    @Inject
-    public CarOwner(String carOwnerName, int carOwnerAge, @Qualifier(name = "bmw") SimpleCar car1) { // @Qualifier(name = "mercedes") SimpleCar mercedes
+    public CarOwner(String carOwnerName, int carOwnerAge, @Qualifier(name = "bmw") SimpleCarr car1) { // @Qualifier(name = "mercedes") SimpleCar mercedes
         this.carOwnerName = carOwnerName;
         this.carOwnerAge = carOwnerAge;
         this.car1 = car1;

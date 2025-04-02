@@ -1,5 +1,5 @@
 package framework.test_beans.testing;
 
-public interface SimpleCar {
+public interface SimpleCarr {
     void carInfo();
 }
