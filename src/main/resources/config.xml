@@ -13,5 +13,28 @@
     </bean>
 
     <bean id="owner" class="framework.test_beans.demo.CarOwner">
+        <constructor>
+            <arg value="ivan"/>
+        </constructor>
+    </bean>
+
+    <bean id="thread-1" class="framework.test_beans.demo.ThreadLocalExample" scope="thread-local">
+    </bean>
+
+    <bean id="car-proto" class="framework.test_beans.demo.Car1" scope="prototype">
+        <properties>
+            <property name="maxSpeed" value="320"/>
+            <property name="color" value="green"/>
+        </properties>
+    </bean>
+
+    <bean id="x" class="framework.test_beans.testing.X" lazy-init="false">
+        <properties>
+            <property name="info" value="some info"/>
+        </properties>
+    </bean>
+    <bean id="y" class="framework.test_beans.testing.Y" lazy-init="false">
+    </bean>
+    <bean id="z" class="framework.test_beans.testing.Z" lazy-init="true">
     </bean>
 </config>

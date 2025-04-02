@@ -8,10 +8,6 @@ public class X {
     @Inject
     private Y y;
 
-//    public X(Y y) {
-//        this.y = y;
-//    }
-
     @Setter
     @Getter
     private String info;

@@ -1,4 +1,4 @@
-package framework.test_beans.testing;
+package framework.test_beans.demo;
 
 import lombok.Getter;
 import lombok.Setter;

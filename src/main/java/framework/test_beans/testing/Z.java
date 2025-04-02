@@ -6,11 +6,7 @@ public class Z {
     @Inject
     private X x;
 
-    public void xInfo() {
-        System.out.println("\n" + x.getInfo());
+    public String xInfo() {
+        return x.getInfo();
     }
-
-//    public Z(X x) {
-//        this.x = x;
-//    }
 }
